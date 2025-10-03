@@ -29,7 +29,7 @@
         @foreach($surats as $surat)
         <tr>
             <td>{{ $surat->nomor_surat }}</td>
-            <td>{{ $surat->kategori->nama_kategori }}</td>
+            <td>{{ $surat->kategori ? $surat->kategori->nama_kategori : 'Tidak ada kategori' }}</td>
             <td>{{ $surat->judul }}</td>
             <td>{{ $surat->created_at->format('Y-m-d H:i') }}</td>
             <td>

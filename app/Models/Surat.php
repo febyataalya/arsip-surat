@@ -14,6 +14,10 @@ class Surat extends Model
         'kategori_id',
         'judul',
         'file_path',
+        'filename_original',
+        'filename_stored',
+        'file_size',
+        'mime',
     ];
 
     public function kategori()

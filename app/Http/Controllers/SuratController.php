@@ -47,22 +47,32 @@ class SuratController extends Controller
             'file_surat'  => 'required|file|mimes:pdf|max:10240',
         ]);
 
-        // Upload file ke storage/app/public/surat dengan nama yang aman
         $filePath = null;
+        $filenameOriginal = null;
+        $filenameStored = null;
+        $fileSize = null;
+        $mime = null;
+
         if ($request->hasFile('file_surat')) {
             $file = $request->file('file_surat');
-            $safeName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+            $filenameOriginal = $file->getClientOriginalName();
+            $safeName = time() . '_' . Str::slug(pathinfo($filenameOriginal, PATHINFO_FILENAME));
             $safeName .= '.' . $file->getClientOriginalExtension();
-
-            // storeAs di disk 'public' -> path yang disimpan: 'surat/namafile.pdf'
+            $filenameStored = $safeName;
             $filePath = $file->storeAs('surat', $safeName, 'public');
+            $fileSize = $file->getSize();
+            $mime = $file->getMimeType();
         }
 
         Surat::create([
-            'nomor_surat' => $validated['nomor_surat'],
-            'kategori_id' => $validated['kategori'],
-            'judul'       => $validated['judul'],
-            'file_path'   => $filePath, // simpan tanpa 'public/' prefix
+            'nomor_surat'       => $validated['nomor_surat'],
+            'kategori_id'       => $validated['kategori'],
+            'judul'             => $validated['judul'],
+            'file_path'         => $filePath,
+            'filename_original' => $filenameOriginal,
+            'filename_stored'   => $filenameStored,
+            'file_size'         => $fileSize,
+            'mime'              => $mime,
         ]);
 
         return redirect()->route('surat.index')->with('success', 'Surat berhasil disimpan.');
@@ -133,26 +143,37 @@ class SuratController extends Controller
             'file_surat'  => 'nullable|file|mimes:pdf|max:10240',
         ]);
 
-        // jika ada file baru, upload lalu hapus file lama
+        $filenameOriginal = $surat->filename_original;
+        $filenameStored = $surat->filename_stored;
+        $fileSize = $surat->file_size;
+        $mime = $surat->mime;
+
         if ($request->hasFile('file_surat')) {
-            // hapus file lama jika ada
             if ($surat->file_path && Storage::disk('public')->exists($surat->file_path)) {
                 Storage::disk('public')->delete($surat->file_path);
             }
 
             $file = $request->file('file_surat');
-            $safeName = time() . '_' . Str::slug(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+            $filenameOriginal = $file->getClientOriginalName();
+            $safeName = time() . '_' . Str::slug(pathinfo($filenameOriginal, PATHINFO_FILENAME));
             $safeName .= '.' . $file->getClientOriginalExtension();
+            $filenameStored = $safeName;
             $filePath = $file->storeAs('surat', $safeName, 'public');
+            $fileSize = $file->getSize();
+            $mime = $file->getMimeType();
         } else {
-            $filePath = $surat->file_path; // tetap pakai yang lama
+            $filePath = $surat->file_path;
         }
 
         $surat->update([
-            'nomor_surat' => $validated['nomor_surat'],
-            'kategori_id' => $validated['kategori'],
-            'judul'       => $validated['judul'],
-            'file_path'   => $filePath,
+            'nomor_surat'       => $validated['nomor_surat'],
+            'kategori_id'       => $validated['kategori'],
+            'judul'             => $validated['judul'],
+            'file_path'         => $filePath,
+            'filename_original' => $filenameOriginal,
+            'filename_stored'   => $filenameStored,
+            'file_size'         => $fileSize,
+            'mime'              => $mime,
         ]);
 
         return redirect()->route('surat.index')->with('success', 'Surat berhasil diubah.');
